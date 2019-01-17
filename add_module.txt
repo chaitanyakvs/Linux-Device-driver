@@ -1,0 +1,102 @@
+How to add a module in linux kernel?
+-------------------------------------
+
+There are two ways to add a module in linux kernel one is kernel space and another one is user space
+
+1). Create a module directory in /kernel/drivers
+
+Eg. mkdir hellodriver
+
+2) Create a file inside /kernel/drivers/hellodriver/  and add below functions and save it.
+
+Sample driver init and exit function in hello.c file.
+
+#include <linux/kernel.h>
+#include <linux/module.h>
+
+static int __init hello_module_init(void)
+{
+printk (“hello test app module init”);
+return 0;
+}
+static int __exit hello_module_cleanup(void)
+{
+
+printk(“hello test app module cleanup “);
+return 0;
+}
+
+module_init(hello_module_init);
+module_exit(hello_module_cleanup);
+MODULE_LICENSE(“GPL”);
+
+
+3).  Create empty Kconfig file and Makefile in /kernel/drivers/hellodriver/
+
+4). Add below entries in Kconfig
+
+config HELLOTEST_APP
+tristate “HelloTest App”
+depends on ARM			/* Here we choose ARM Architecure */
+default m			/* choose Module */
+help
+hellotest app
+
+5). Add below entries in Makefile
+
+obj-$(CONFIG_HELLOTEST_APP) +=hello.o
+
+6). Modify the /kernel/drivers Kconfig and Makefile to support your module
+
+7). Add below entry in /kernel/drivers/Kconfig file
+
+source “drivers/hellodriver/Kconfig”
+
+8). Add below entry in /kernel/drivers/Makefile file
+
+obj-$(CONFIG_HELLOTEST_APP) +=hellodriver/
+
+9).  Now go to kernel directory and give
+
+make menuconfig ARCH=arm
+
+Verify that your driver module entry is visible under Device Drivers  —>
+
+For module entry it shows <M> HelloTest App
+
+Now recompile the kernel with your requirement  and give
+
+sudo make ARCH=arm CROSS_COMPILE=your toolchain path-
+
+10). Check the hello.o and hello.ko files are generated at /kernel/drivers/hellodriver/
+
+If you want to make your module as a part of kernel image then you only need to change <*> HelloTest App the option in menuconfig and  recompile the kernel.
+
+If you don’t want to make your module as a part of kernel image then you only need to change <> HelloTest App the option in menuconfig and  recompile the kernel.
+
+By using <space bar> we can change the status of the module. Whether it should be static or dynamic
+
+This is a very simple example of adding a module in a kernel.
+
+Userspace:
+-----------
+
+In userspace write the sample driver program Just like in kernel space hello.c
+
+2) We use make file for the kernel object file i.e., hello.ko
+
+3) Here we use insmod command to insert the module in the existing kernel
+
+	insmod <filename.ko>
+
+	ex : insmod hello.ko
+
+4) Use lsmod command whether the module is loaded or not
+
+5) Use dmesg for log file
+
+6) By using rmmod command to remove the module from the kernel
+
+	rmmod hello.ko
+
+
